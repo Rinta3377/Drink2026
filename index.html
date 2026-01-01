@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- 移動端全螢幕標籤 -->
+    <!-- PWA / 行動端全螢幕標籤 -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,12 +14,15 @@
     <!-- 桌面圖示 (SVG) -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M30 35 L70 35 L65 80 L35 80 Z' fill='white'/%3E%3Cpath d='M45 20 L55 20 L55 40 L45 40 Z' fill='white' opacity='0.6'/%3E%3Ccircle cx='42' cy='65' r='3' fill='%230d9488'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%230d9488'/%3E%3Ccircle cx='58' cy='62' r='3' fill='%230d9488'/%3E%3C/svg%3E">
 
-    <!-- 內嵌 PWA Manifest: 確保 Android Chrome 判定為應用程式而非書籤 -->
-    <link rel="manifest" href='data:application/json,{"name":"今天喝手搖了嗎","short_name":"手搖統計","start_url":".","display":"standalone","background_color":"#f0fdfa","theme_color":"#0d9488","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2225%22 fill=%22%230d9488%22/%3E%3Cpath d=%22M30 35 L70 35 L65 80 L35 80 Z%22 fill=%22white%22/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
+    <!-- 終極 PWA Manifest：強制 Chrome 識別為獨立 App -->
+    <link rel="manifest" href='data:application/json,{"name":"今天喝手搖了嗎","short_name":"手搖統計","start_url":".","display":"standalone","background_color":"#f0fdfa","theme_color":"#0d9488","orientation":"portrait","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2225%22 fill=%22%230d9488%22/%3E%3Cpath d=%22M30 35 L70 35 L65 80 L35 80 Z%22 fill=%22white%22/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
 
     <title>今天喝手搖了嗎 - 2026 統計表</title>
+    
+    <!-- 外部資源載入 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         
@@ -40,7 +43,7 @@
             color: #334155;
         }
 
-        /* 玻璃擬態卡片設計 */
+        /* 玻璃擬態樣式 */
         .glass-card {
             background: rgba(255, 255, 255, 0.65);
             backdrop-filter: blur(16px);
@@ -49,6 +52,7 @@
             box-shadow: 0 8px 32px 0 rgba(13, 148, 136, 0.05);
         }
 
+        /* 日曆格點 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .day-cell { 
             aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
@@ -65,6 +69,7 @@
             background-color: var(--primary); border-radius: 50%; 
         }
         
+        /* 選項按鈕自訂樣式 */
         .option-label { 
             display: flex; align-items: center; justify-content: center; padding: 4px; 
             border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 12px; 
@@ -85,7 +90,7 @@
             box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2);
         }
 
-        .modal-overlay { background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px); z-index: 100; }
+        .modal-overlay { background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px); z-index: 200; }
         
         .loading-spinner {
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -100,7 +105,7 @@
 </head>
 <body class="pb-20">
 
-    <!-- 頂部置中對稱標題 -->
+    <!-- 置中對稱標題列 -->
     <header class="bg-white/70 backdrop-blur-md p-5 sticky top-0 z-50 border-b border-teal-100/50">
         <div class="max-w-md mx-auto text-center flex items-center justify-center gap-3">
             <i data-lucide="cup-soda" class="text-teal-600"></i>
@@ -111,7 +116,7 @@
 
     <main class="max-w-md mx-auto p-5 space-y-6">
         
-        <!-- 日曆與月份數據區 -->
+        <!-- 日曆與月數據區 -->
         <section class="glass-card rounded-[2rem] p-6">
             <div class="flex justify-between items-center mb-6">
                 <button id="prevMonth" class="p-2 bg-white rounded-xl text-teal-700 shadow-sm transition active:scale-90"><i data-lucide="chevron-left" size="24"></i></button>
@@ -135,11 +140,11 @@
             </div>
         </section>
 
-        <!-- 年度報表：年度統計 -> TOP 3 -> AI 分析 -->
+        <!-- 年度報表 -->
         <section class="gradient-card text-white rounded-[2rem] p-6 relative overflow-hidden shadow-lg">
             <i data-lucide="award" class="absolute -top-4 -right-4 opacity-10" size="120"></i>
             <h3 class="font-bold text-teal-50 mb-5 flex items-center gap-2 text-xs uppercase tracking-widest">
-                <i data-lucide="trending-up" size="14"></i> 2026 年度累計報表
+                <i data-lucide="trending-up" size="14"></i> 2026 年度累計
             </h3>
             
             <div class="grid grid-cols-2 gap-4 mb-6">
@@ -148,7 +153,7 @@
                     <div class="text-2xl font-black"><span id="yearCount">0</span></div>
                 </div>
                 <div class="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10 text-center">
-                    <div class="text-[10px] text-teal-100 font-bold mb-1 opacity-70">年度總支出</div>
+                    <div class="text-[10px] text-teal-100 font-bold mb-1 opacity-70">年度總金額</div>
                     <div class="text-2xl font-black"><span id="yearTotal">0</span></div>
                 </div>
             </div>
@@ -156,10 +161,10 @@
             <!-- 1. 年度最愛 TOP 3 -->
             <div class="bg-black/10 p-4 rounded-2xl border border-white/5 mb-4">
                 <div class="text-[10px] text-teal-100 font-bold mb-3 flex items-center gap-2 opacity-80"><i data-lucide="star" size="12"></i> 年度最愛品項 TOP 3</div>
-                <div id="topItemsList" class="space-y-2 text-sm"></div>
+                <div id="topItemsList" class="space-y-2 text-sm font-medium"></div>
             </div>
 
-            <!-- 2. AI 飲品性格分析 -->
+            <!-- 2. AI 性格診斷 -->
             <div class="bg-black/20 p-4 rounded-2xl border border-white/10">
                 <div class="flex justify-between items-center mb-3">
                     <div class="text-[10px] text-teal-100 font-bold flex items-center gap-2 uppercase tracking-widest"><i data-lucide="sparkles" size="12"></i> AI 飲品性格診斷</div>
@@ -169,12 +174,12 @@
                     </button>
                 </div>
                 <div id="aiPersonalityText" class="text-xs text-teal-50 italic leading-relaxed">
-                    尚未分析。點擊按鈕診斷您的手搖魂...
+                    尚未分析。點擊按鈕診斷手搖魂...
                 </div>
             </div>
         </section>
 
-        <!-- 每日詳情清單區 -->
+        <!-- 當日清單區 -->
         <section id="dailySection" class="glass-card rounded-[2rem] p-6 hidden">
             <div class="flex justify-between items-center mb-6">
                 <h3 id="selectedDateText" class="font-black text-teal-900 text-xl tracking-tight">2026-01-01</h3>
@@ -188,13 +193,13 @@
 
         <section id="emptyState" class="text-center py-20">
             <i data-lucide="sparkles" class="mx-auto text-teal-600/20 mb-4 animate-pulse" size="64"></i>
-            <p class="text-teal-700/40 font-bold text-xs uppercase tracking-widest text-center">點擊日曆日期開始紀錄</p>
+            <p class="text-teal-700/40 font-bold text-xs uppercase tracking-widest">點擊日期直接記錄</p>
         </section>
 
     </main>
 
-    <!-- 編輯/新增視窗 -->
-    <div id="editModal" class="fixed inset-0 modal-overlay flex items-end sm:items-center justify-center hidden" style="z-index: 150;">
+    <!-- 編輯/新增對話框 -->
+    <div id="editModal" class="fixed inset-0 modal-overlay flex items-end sm:items-center justify-center hidden" style="z-index: 1000;">
         <div class="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
             <div class="flex justify-between items-center mb-6">
                 <h4 id="modalTitle" class="text-xl font-black text-teal-900">新增紀錄</h4>
@@ -230,7 +235,7 @@
                 </div>
 
                 <input type="number" id="price" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 font-black text-xl" placeholder="價格 NT$">
-                <textarea id="notes" rows="3" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 text-sm font-medium" placeholder="這杯喝起來如何？寫點心得吧..."></textarea>
+                <textarea id="notes" rows="3" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 text-sm font-medium" placeholder="寫點心得..."></textarea>
                 
                 <div class="flex gap-3 pt-4">
                     <button type="button" id="saveBtn" class="flex-1 bg-teal-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">儲存紀錄</button>
@@ -240,8 +245,8 @@
         </div>
     </div>
 
-    <!-- 刪除確認視窗 -->
-    <div id="confirmModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[300]">
+    <!-- 刪除確認對話框 -->
+    <div id="confirmModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[2000]">
         <div class="bg-white rounded-[2rem] w-full max-w-xs p-8 shadow-2xl space-y-6 text-center animate-in zoom-in-95">
             <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl mx-auto flex items-center justify-center"><i data-lucide="alert-triangle" size="32"></i></div>
             <h4 class="text-xl font-black text-slate-800">確定刪除嗎？</h4>
@@ -252,24 +257,32 @@
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-10 py-4 rounded-full text-xs font-black shadow-2xl opacity-0 transition-all pointer-events-none z-[400] tracking-widest uppercase">
-        已同步雲端
+    <!-- 通知 Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-10 py-4 rounded-full text-xs font-black shadow-2xl opacity-0 transition-all pointer-events-none z-[3000] tracking-widest uppercase">
+        Synced to Cloud
     </div>
 
+    <!-- Firebase & 邏輯指令 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        /* 注意：若您要在自己的 GitHub 上執行，請更換下方的配置。
-           目前的配置會自動抓取本系統提供的 Firebase 與 Gemini 金鑰。
-        */
-        const apiKey = ""; // Gemini API Key
+        // --- 配置 ---
+        const apiKey = ""; // 執行環境會自動注入
         const geminiModel = "gemini-2.5-flash-preview-09-2025";
-
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { /* 此處放入您的 Firebase Config */ };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'drink-tracker-prod';
         
+        // 此區塊由環境自動處理，部署於 GitHub Pages 時需替換為您的 Firebase Config
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSy...", // 請替換
+            authDomain: "your-app.firebaseapp.com",
+            projectId: "your-app",
+            storageBucket: "your-app.firebasestorage.app",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'drink-tracker-github';
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -285,7 +298,7 @@
         };
         registerSW();
 
-        // --- Gemini AI 調用 ---
+        // --- Gemini API 助手 ---
         async function callGemini(prompt, systemInstruction = "") {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
             const payload = {
@@ -306,27 +319,36 @@
             }
         }
 
+        // --- 核心邏輯變數 ---
         let user = null, selectedDate = null, allLogs = [], editingId = null;
         let currentYear = 2026, currentMonth = 0;
 
         const calendarEl = document.getElementById('calendar'), monthYearText = document.getElementById('currentMonthYear'), dailySection = document.getElementById('dailySection'), emptyState = document.getElementById('emptyState'), editModal = document.getElementById('editModal'), confirmModal = document.getElementById('confirmModal'), drinkList = document.getElementById('drinkList'), drinkForm = document.getElementById('drinkForm');
 
+        // --- 認證與同步 ---
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
             else await signInAnonymously(auth);
         };
 
-        onAuthStateChanged(auth, (u) => { user = u; if (user) fetchData(); });
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if (user) fetchData();
+        });
 
         const fetchData = () => {
             if (!user) return;
-            onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'drink_logs'), (snapshot) => {
-                allLogs = []; snapshot.forEach(doc => { allLogs.push({ id: doc.id, ...doc.data() }); });
-                renderCalendar(); updateStats();
+            const logsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'drink_logs');
+            onSnapshot(logsRef, (snapshot) => {
+                allLogs = [];
+                snapshot.forEach(doc => { allLogs.push({ id: doc.id, ...doc.data() }); });
+                renderCalendar();
+                updateStats();
                 if (selectedDate) renderDailyDrinks(selectedDate);
             });
         };
 
+        // --- UI 渲染功能 ---
         const renderCalendar = () => {
             calendarEl.innerHTML = '';
             const firstDay = new Date(currentYear, currentMonth, 1).getDay(), daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -355,7 +377,7 @@
             const dailyDrinks = allLogs.filter(log => log.date === dateStr);
             drinkList.innerHTML = '';
             if (dailyDrinks.length === 0) {
-                drinkList.innerHTML = '<div class="text-center py-6 text-teal-700/30 text-xs italic">尚未有飲品紀錄</div>';
+                drinkList.innerHTML = '<div class="text-center py-6 text-teal-700/30 text-xs italic tracking-widest uppercase">No Records Yet</div>';
                 return;
             }
             dailyDrinks.forEach(drink => {
@@ -364,8 +386,8 @@
                 card.onclick = (e) => { e.stopPropagation(); openModal(drink.id); };
                 card.innerHTML = `
                     <div class="space-y-1">
-                        <div class="text-[10px] text-teal-600 font-bold uppercase">${drink.shopName || '未知店家'}</div>
-                        <div class="text-lg font-black text-slate-800">${drink.itemName || '無名飲品'}</div>
+                        <div class="text-[10px] text-teal-600 font-bold uppercase tracking-widest">${drink.shopName || '未知店家'}</div>
+                        <div class="text-lg font-black text-slate-800 tracking-tight leading-tight">${drink.itemName || '無名飲品'}</div>
                         <div class="flex gap-2 pt-1"><span class="badge badge-ice">${drink.iceLevel}</span><span class="badge badge-sugar">${drink.sweetness}</span></div>
                     </div>
                     <div class="text-right text-lg font-black text-teal-700">NT$ ${drink.price}</div>
@@ -398,6 +420,7 @@
             lucide.createIcons();
         };
 
+        // --- 事件處理 ---
         document.getElementById('saveBtn').onclick = async () => {
             if (!user || !selectedDate) return;
             const data = {
@@ -410,27 +433,27 @@
             try {
                 if (editingId) await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'drink_logs', editingId), data);
                 else await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'drink_logs'), data);
-                editModal.classList.add('hidden'); showToast("已儲存紀錄");
+                editModal.classList.add('hidden'); showToast("Synced to Cloud");
             } catch (err) { console.error(err); }
         };
 
         document.getElementById('aiAnalyzeBtn').onclick = async () => {
-            if (allLogs.length === 0) return showToast("目前尚無數據");
+            if (allLogs.length === 0) return showToast("尚未紀錄");
             const target = document.getElementById('aiPersonalityText'), loading = document.getElementById('aiLoading'), btnText = document.getElementById('aiBtnText'), btn = document.getElementById('aiAnalyzeBtn');
             btn.disabled = true; loading.classList.remove('hidden'); btnText.innerText = "✨ 分析中...";
             target.innerText = "正在診斷您的手搖性格...";
             try {
                 const summary = allLogs.slice(-15).map(l => `${l.itemName}(${l.sweetness})`).join(', ');
                 const prompt = `這是我最近喝的手搖紀錄：${summary}。請根據這些紀錄分析我是一個怎樣的手搖愛好者？請給我一個幽默且有梗的「封號」，並對我的 2026 年給出一句健康建議。請用繁體中文回答，長度約 100 字。`;
-                target.innerText = (await callGemini(prompt, "你是一位幽默的手搖飲大師，說話帶點有趣的小吐槽但內心很溫暖。")).trim();
+                target.innerText = (await callGemini(prompt, "你是一位幽默的手搖飲大師，說話帶點有趣的吐槽但很溫暖。")).trim();
                 showToast("分析完成！");
-            } catch (err) { target.innerText = "AI 暫時口渴了，請稍後再試。"; } finally { btn.disabled = false; loading.classList.add('hidden'); btnText.innerText = "✨ 重新分析"; }
+            } catch (err) { target.innerText = "AI 暫時口渴了。"; } finally { btn.disabled = false; loading.classList.add('hidden'); btnText.innerText = "✨ 重新分析"; }
         };
 
         document.getElementById('deleteBtn').onclick = () => confirmModal.classList.remove('hidden');
         document.getElementById('confirmDelete').onclick = async () => {
             await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'drink_logs', editingId));
-            confirmModal.classList.add('hidden'); editModal.classList.add('hidden'); showToast("已刪除紀錄");
+            confirmModal.classList.add('hidden'); editModal.classList.add('hidden'); showToast("紀錄已刪除");
         };
         document.getElementById('cancelBtn').onclick = () => editModal.classList.add('hidden');
         document.getElementById('cancelDelete').onclick = () => confirmModal.classList.add('hidden');
@@ -461,7 +484,7 @@
                     </span>
                     <span class="text-teal-200 font-black text-xs">${it[1]} 杯</span>
                 </div>`
-            ).join('') : '<div class="opacity-30 text-[10px] font-bold text-center tracking-widest uppercase">尚未有年度數據</div>';
+            ).join('') : '<div class="opacity-30 text-[10px] font-bold text-center tracking-widest uppercase py-2">尚未有數據</div>';
         };
 
         window.onload = () => { initAuth(); renderCalendar(); };
