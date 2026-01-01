@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- 移動端優化標籤 -->
+    <!-- 移動端全螢幕標籤 -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="手搖統計">
     <meta name="theme-color" content="#0d9488">
     
-    <!-- 桌面圖示 -->
+    <!-- 桌面圖示 (SVG) -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M30 35 L70 35 L65 80 L35 80 Z' fill='white'/%3E%3Cpath d='M45 20 L55 20 L55 40 L45 40 Z' fill='white' opacity='0.6'/%3E%3Ccircle cx='42' cy='65' r='3' fill='%230d9488'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%230d9488'/%3E%3Ccircle cx='58' cy='62' r='3' fill='%230d9488'/%3E%3C/svg%3E">
 
-    <!-- 終極 Manifest 定義 (Android Chrome 專用) -->
-    <link rel="manifest" href='data:application/manifest+json,{"name":"今天喝手搖了嗎","short_name":"手搖統計","start_url":".","display":"standalone","background_color":"#f0fdfa","theme_color":"#0d9488","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2225%22 fill=%22%230d9488%22/%3E%3Cpath d=%22M30 35 L70 35 L65 80 L35 80 Z%22 fill=%22white%22/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
+    <!-- 內嵌 PWA Manifest: 確保 Android Chrome 判定為應用程式而非書籤 -->
+    <link rel="manifest" href='data:application/json,{"name":"今天喝手搖了嗎","short_name":"手搖統計","start_url":".","display":"standalone","background_color":"#f0fdfa","theme_color":"#0d9488","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2225%22 fill=%22%230d9488%22/%3E%3Cpath d=%22M30 35 L70 35 L65 80 L35 80 Z%22 fill=%22white%22/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
 
     <title>今天喝手搖了嗎 - 2026 統計表</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,6 +40,7 @@
             color: #334155;
         }
 
+        /* 玻璃擬態卡片設計 */
         .glass-card {
             background: rgba(255, 255, 255, 0.65);
             backdrop-filter: blur(16px);
@@ -60,7 +61,7 @@
             box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
         }
         .day-cell.has-data::after { 
-            content: ''; position: absolute; bottom: 6px; width: 4px; height: 4px; 
+            content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; 
             background-color: var(--primary); border-radius: 50%; 
         }
         
@@ -99,6 +100,7 @@
 </head>
 <body class="pb-20">
 
+    <!-- 頂部置中對稱標題 -->
     <header class="bg-white/70 backdrop-blur-md p-5 sticky top-0 z-50 border-b border-teal-100/50">
         <div class="max-w-md mx-auto text-center flex items-center justify-center gap-3">
             <i data-lucide="cup-soda" class="text-teal-600"></i>
@@ -109,7 +111,7 @@
 
     <main class="max-w-md mx-auto p-5 space-y-6">
         
-        <!-- 日曆區塊 -->
+        <!-- 日曆與月份數據區 -->
         <section class="glass-card rounded-[2rem] p-6">
             <div class="flex justify-between items-center mb-6">
                 <button id="prevMonth" class="p-2 bg-white rounded-xl text-teal-700 shadow-sm transition active:scale-90"><i data-lucide="chevron-left" size="24"></i></button>
@@ -133,11 +135,11 @@
             </div>
         </section>
 
-        <!-- 年度報表 -->
+        <!-- 年度報表：年度統計 -> TOP 3 -> AI 分析 -->
         <section class="gradient-card text-white rounded-[2rem] p-6 relative overflow-hidden shadow-lg">
             <i data-lucide="award" class="absolute -top-4 -right-4 opacity-10" size="120"></i>
             <h3 class="font-bold text-teal-50 mb-5 flex items-center gap-2 text-xs uppercase tracking-widest">
-                <i data-lucide="trending-up" size="14"></i> 2026 年度累計
+                <i data-lucide="trending-up" size="14"></i> 2026 年度累計報表
             </h3>
             
             <div class="grid grid-cols-2 gap-4 mb-6">
@@ -146,33 +148,33 @@
                     <div class="text-2xl font-black"><span id="yearCount">0</span></div>
                 </div>
                 <div class="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10 text-center">
-                    <div class="text-[10px] text-teal-100 font-bold mb-1 opacity-70">年度總金額</div>
+                    <div class="text-[10px] text-teal-100 font-bold mb-1 opacity-70">年度總支出</div>
                     <div class="text-2xl font-black"><span id="yearTotal">0</span></div>
                 </div>
             </div>
             
             <!-- 1. 年度最愛 TOP 3 -->
             <div class="bg-black/10 p-4 rounded-2xl border border-white/5 mb-4">
-                <div class="text-[10px] text-teal-100 font-bold mb-3 flex items-center gap-2 opacity-80"><i data-lucide="star" size="12"></i> 年度最愛 TOP 3</div>
+                <div class="text-[10px] text-teal-100 font-bold mb-3 flex items-center gap-2 opacity-80"><i data-lucide="star" size="12"></i> 年度最愛品項 TOP 3</div>
                 <div id="topItemsList" class="space-y-2 text-sm"></div>
             </div>
 
-            <!-- 2. AI 性格分析 -->
+            <!-- 2. AI 飲品性格分析 -->
             <div class="bg-black/20 p-4 rounded-2xl border border-white/10">
                 <div class="flex justify-between items-center mb-3">
-                    <div class="text-[10px] text-teal-100 font-bold flex items-center gap-2 uppercase tracking-widest"><i data-lucide="sparkles" size="12"></i> AI 飲品性格分析</div>
+                    <div class="text-[10px] text-teal-100 font-bold flex items-center gap-2 uppercase tracking-widest"><i data-lucide="sparkles" size="12"></i> AI 飲品性格診斷</div>
                     <button id="aiAnalyzeBtn" class="bg-white/20 text-[10px] px-2 py-1 rounded-lg font-bold hover:bg-white/30 transition flex items-center gap-1">
                         <span id="aiBtnText">✨ 分析品味</span>
                         <div id="aiLoading" class="loading-spinner hidden"></div>
                     </button>
                 </div>
                 <div id="aiPersonalityText" class="text-xs text-teal-50 italic leading-relaxed">
-                    尚未分析。點擊按鈕診斷手搖魂...
+                    尚未分析。點擊按鈕診斷您的手搖魂...
                 </div>
             </div>
         </section>
 
-        <!-- 每日詳情清單 -->
+        <!-- 每日詳情清單區 -->
         <section id="dailySection" class="glass-card rounded-[2rem] p-6 hidden">
             <div class="flex justify-between items-center mb-6">
                 <h3 id="selectedDateText" class="font-black text-teal-900 text-xl tracking-tight">2026-01-01</h3>
@@ -186,12 +188,12 @@
 
         <section id="emptyState" class="text-center py-20">
             <i data-lucide="sparkles" class="mx-auto text-teal-600/20 mb-4 animate-pulse" size="64"></i>
-            <p class="text-teal-700/40 font-bold text-xs uppercase tracking-widest">點擊日期直接記錄</p>
+            <p class="text-teal-700/40 font-bold text-xs uppercase tracking-widest text-center">點擊日曆日期開始紀錄</p>
         </section>
 
     </main>
 
-    <!-- 編輯/新增 Modal -->
+    <!-- 編輯/新增視窗 -->
     <div id="editModal" class="fixed inset-0 modal-overlay flex items-end sm:items-center justify-center hidden" style="z-index: 150;">
         <div class="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
             <div class="flex justify-between items-center mb-6">
@@ -228,7 +230,7 @@
                 </div>
 
                 <input type="number" id="price" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 font-black text-xl" placeholder="價格 NT$">
-                <textarea id="notes" rows="3" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 text-sm font-medium" placeholder="這杯喝起來如何？"></textarea>
+                <textarea id="notes" rows="3" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 text-sm font-medium" placeholder="這杯喝起來如何？寫點心得吧..."></textarea>
                 
                 <div class="flex gap-3 pt-4">
                     <button type="button" id="saveBtn" class="flex-1 bg-teal-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">儲存紀錄</button>
@@ -238,8 +240,8 @@
         </div>
     </div>
 
-    <!-- 刪除確認 Modal -->
-    <div id="confirmModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[200]">
+    <!-- 刪除確認視窗 -->
+    <div id="confirmModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[300]">
         <div class="bg-white rounded-[2rem] w-full max-w-xs p-8 shadow-2xl space-y-6 text-center animate-in zoom-in-95">
             <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl mx-auto flex items-center justify-center"><i data-lucide="alert-triangle" size="32"></i></div>
             <h4 class="text-xl font-black text-slate-800">確定刪除嗎？</h4>
@@ -251,7 +253,7 @@
     </div>
 
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-10 py-4 rounded-full text-xs font-black shadow-2xl opacity-0 transition-all pointer-events-none z-[400] tracking-widest uppercase">
-        Synced to Cloud
+        已同步雲端
     </div>
 
     <script type="module">
@@ -259,7 +261,20 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- 虛擬 Service Worker 註冊 (Android 修復關鍵) ---
+        /* 注意：若您要在自己的 GitHub 上執行，請更換下方的配置。
+           目前的配置會自動抓取本系統提供的 Firebase 與 Gemini 金鑰。
+        */
+        const apiKey = ""; // Gemini API Key
+        const geminiModel = "gemini-2.5-flash-preview-09-2025";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { /* 此處放入您的 Firebase Config */ };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'drink-tracker-prod';
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- Android 全螢幕修復：註冊虛擬 Service Worker ---
         const registerSW = () => {
             if ('serviceWorker' in navigator) {
                 const swCode = "self.addEventListener('fetch', function(event) {});";
@@ -270,10 +285,7 @@
         };
         registerSW();
 
-        // --- Gemini API ---
-        const apiKey = "";
-        const geminiModel = "gemini-2.5-flash-preview-09-2025";
-
+        // --- Gemini AI 調用 ---
         async function callGemini(prompt, systemInstruction = "") {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
             const payload = {
@@ -293,13 +305,6 @@
                 }
             }
         }
-
-        // --- Firebase ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'drink-tracker-final-2026';
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
 
         let user = null, selectedDate = null, allLogs = [], editingId = null;
         let currentYear = 2026, currentMonth = 0;
@@ -350,7 +355,7 @@
             const dailyDrinks = allLogs.filter(log => log.date === dateStr);
             drinkList.innerHTML = '';
             if (dailyDrinks.length === 0) {
-                drinkList.innerHTML = '<div class="text-center py-6 text-teal-700/30 text-xs italic">尚未紀錄</div>';
+                drinkList.innerHTML = '<div class="text-center py-6 text-teal-700/30 text-xs italic">尚未有飲品紀錄</div>';
                 return;
             }
             dailyDrinks.forEach(drink => {
@@ -373,7 +378,10 @@
         const openModal = (id = null) => {
             editingId = id;
             document.getElementById('modalTitle').innerText = id ? "編輯紀錄" : "新增紀錄";
-            document.getElementById('deleteBtn').classList.toggle('hidden', !id);
+            const deleteBtn = document.getElementById('deleteBtn');
+            if (id) deleteBtn.classList.remove('hidden');
+            else deleteBtn.classList.add('hidden');
+            
             drinkForm.reset();
             if (id) {
                 const drink = allLogs.find(l => l.id === id);
@@ -393,31 +401,30 @@
         document.getElementById('saveBtn').onclick = async () => {
             if (!user || !selectedDate) return;
             const data = {
-                date: selectedDate,
-                shopName: document.getElementById('shopName').value,
-                itemName: document.getElementById('itemName').value,
+                date: selectedDate, shopName: document.getElementById('shopName').value, itemName: document.getElementById('itemName').value,
                 price: Number(document.getElementById('price').value) || 0,
                 iceLevel: document.querySelector('input[name="ice"]:checked')?.value || '正常冰',
                 sweetness: document.querySelector('input[name="sugar"]:checked')?.value || '正常甜',
-                notes: document.getElementById('notes').value,
-                timestamp: new Date().toISOString()
+                notes: document.getElementById('notes').value, timestamp: new Date().toISOString()
             };
-            if (editingId) await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'drink_logs', editingId), data);
-            else await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'drink_logs'), data);
-            editModal.classList.add('hidden'); showToast("已存檔");
+            try {
+                if (editingId) await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'drink_logs', editingId), data);
+                else await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'drink_logs'), data);
+                editModal.classList.add('hidden'); showToast("已儲存紀錄");
+            } catch (err) { console.error(err); }
         };
 
         document.getElementById('aiAnalyzeBtn').onclick = async () => {
-            if (allLogs.length === 0) return showToast("尚未紀錄");
+            if (allLogs.length === 0) return showToast("目前尚無數據");
             const target = document.getElementById('aiPersonalityText'), loading = document.getElementById('aiLoading'), btnText = document.getElementById('aiBtnText'), btn = document.getElementById('aiAnalyzeBtn');
             btn.disabled = true; loading.classList.remove('hidden'); btnText.innerText = "✨ 分析中...";
-            target.innerText = "正在診斷您的手搖魂...";
+            target.innerText = "正在診斷您的手搖性格...";
             try {
                 const summary = allLogs.slice(-15).map(l => `${l.itemName}(${l.sweetness})`).join(', ');
-                const prompt = `這是我最近喝的手搖紀錄：${summary}。請根據這些紀錄分析我是一個怎樣的手搖愛好者？請給我一個幽默的「封號」，並對我的 2026 年給出一句健康建議。請用繁體中文回答，約 100 字。`;
-                target.innerText = (await callGemini(prompt, "你是一位幽默的手搖飲大師，說話帶點有趣的吐槽但很溫馨。")).trim();
+                const prompt = `這是我最近喝的手搖紀錄：${summary}。請根據這些紀錄分析我是一個怎樣的手搖愛好者？請給我一個幽默且有梗的「封號」，並對我的 2026 年給出一句健康建議。請用繁體中文回答，長度約 100 字。`;
+                target.innerText = (await callGemini(prompt, "你是一位幽默的手搖飲大師，說話帶點有趣的小吐槽但內心很溫暖。")).trim();
                 showToast("分析完成！");
-            } catch (err) { target.innerText = "AI 暫時口渴了。"; } finally { btn.disabled = false; loading.classList.add('hidden'); btnText.innerText = "✨ 重新分析"; }
+            } catch (err) { target.innerText = "AI 暫時口渴了，請稍後再試。"; } finally { btn.disabled = false; loading.classList.add('hidden'); btnText.innerText = "✨ 重新分析"; }
         };
 
         document.getElementById('deleteBtn').onclick = () => confirmModal.classList.remove('hidden');
@@ -446,7 +453,15 @@
             document.getElementById('yearTotal').innerText = yt.toLocaleString();
             document.getElementById('yearCount').innerText = yc;
             const sorted = Object.entries(items).sort((a,b) => b[1]-a[1]).slice(0, 3);
-            document.getElementById('topItemsList').innerHTML = sorted.map((it, i) => `<div class="flex justify-between text-xs font-bold"><span>${i+1}. ${it[0]}</span><span class="text-teal-200">${it[1]} 杯</span></div>`).join('') || '<div class="opacity-30 text-[10px] font-bold text-center">NO DATA</div>';
+            document.getElementById('topItemsList').innerHTML = sorted.length ? sorted.map((it, i) => 
+                `<div class="flex justify-between items-center">
+                    <span class="flex items-center gap-3">
+                        <span class="w-5 h-5 rounded-md bg-white/20 text-white text-[10px] flex items-center justify-center font-black">${i+1}</span> 
+                        <span class="font-bold tracking-tight">${it[0]}</span>
+                    </span>
+                    <span class="text-teal-200 font-black text-xs">${it[1]} 杯</span>
+                </div>`
+            ).join('') : '<div class="opacity-30 text-[10px] font-bold text-center tracking-widest uppercase">尚未有年度數據</div>';
         };
 
         window.onload = () => { initAuth(); renderCalendar(); };
