@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- 移動端優化標籤 -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="手搖統計">
+    <meta name="theme-color" content="#0d9488">
+    
+    <!-- 桌面圖示 -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M30 35 L70 35 L65 80 L35 80 Z' fill='white'/%3E%3Cpath d='M45 20 L55 20 L55 40 L45 40 Z' fill='white' opacity='0.6'/%3E%3Ccircle cx='42' cy='65' r='3' fill='%230d9488'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%230d9488'/%3E%3Ccircle cx='58' cy='62' r='3' fill='%230d9488'/%3E%3C/svg%3E">
+
+    <!-- 終極 Manifest 定義 (Android Chrome 專用) -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"今天喝手搖了嗎","short_name":"手搖統計","start_url":".","display":"standalone","background_color":"#f0fdfa","theme_color":"#0d9488","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2225%22 fill=%22%230d9488%22/%3E%3Cpath d=%22M30 35 L70 35 L65 80 L35 80 Z%22 fill=%22white%22/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
+
+    <title>今天喝手搖了嗎 - 2026 統計表</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f766e;
+            --primary-light: #f0fdfa;
+        }
+
+        body { 
+            font-family: 'Noto+Sans+TC', sans-serif; 
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            color: #334155;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(13, 148, 136, 0.05);
+        }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .day-cell { 
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; border-radius: 14px; transition: all 0.3s ease; 
+            position: relative; font-weight: 500; font-size: 0.9rem;
+        }
+        .day-cell.active { 
+            background: var(--primary) !important; 
+            color: white !important; font-weight: 900; 
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        }
+        .day-cell.has-data::after { 
+            content: ''; position: absolute; bottom: 6px; width: 4px; height: 4px; 
+            background-color: var(--primary); border-radius: 50%; 
+        }
+        
+        .option-label { 
+            display: flex; align-items: center; justify-content: center; padding: 4px; 
+            border: 2px solid rgba(13, 148, 136, 0.2); border-radius: 12px; 
+            font-size: 0.75rem; cursor: pointer; transition: all 0.2s; 
+            background-color: white; color: #64748b; height: 44px; text-align: center;
+        }
+        .option-input:checked + .option-label {
+            background-color: #f0fdfa; border-color: var(--primary); color: var(--primary); font-weight: 700; 
+            box-shadow: 0 2px 4px rgba(13, 148, 136, 0.1);
+        }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
+        .badge-ice { background-color: #f0f9ff; color: #0284c7; border: 1px solid #e0f2fe; }
+        .badge-sugar { background-color: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+
+        .gradient-card {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2);
+        }
+
+        .modal-overlay { background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px); z-index: 100; }
+        
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid white;
+            width: 12px;
+            height: 12px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="bg-white/70 backdrop-blur-md p-5 sticky top-0 z-50 border-b border-teal-100/50">
+        <div class="max-w-md mx-auto text-center flex items-center justify-center gap-3">
+            <i data-lucide="cup-soda" class="text-teal-600"></i>
+            <h1 class="text-xl font-black text-teal-800">今天喝手搖了嗎</h1>
+            <i data-lucide="cup-soda" class="text-teal-600"></i>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-5 space-y-6">
+        
+        <!-- 日曆區塊 -->
+        <section class="glass-card rounded-[2rem] p-6">
+            <div class="flex justify-between items-center mb-6">
+                <button id="prevMonth" class="p-2 bg-white rounded-xl text-teal-700 shadow-sm transition active:scale-90"><i data-lucide="chevron-left" size="24"></i></button>
+                <h2 id="currentMonthYear" class="text-lg font-black text-teal-900">2026年 1月</h2>
+                <button id="nextMonth" class="p-2 bg-white rounded-xl text-teal-700 shadow-sm transition active:scale-90"><i data-lucide="chevron-right" size="24"></i></button>
+            </div>
+            <div class="grid grid-cols-7 text-center text-[11px] font-bold uppercase tracking-wider text-teal-600/40 mb-4">
+                <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+            </div>
+            <div id="calendar" class="calendar-grid"></div>
+
+            <div class="mt-8 pt-6 border-t border-teal-100/30 grid grid-cols-2 gap-4">
+                <div class="bg-white/40 p-4 rounded-2xl border border-white/50 text-center">
+                    <span class="text-[10px] font-bold text-teal-600/60 uppercase tracking-widest block mb-1">本月支出</span>
+                    <span class="text-xl font-black text-teal-800">NT$ <span id="monthTotal">0</span></span>
+                </div>
+                <div class="bg-white/40 p-4 rounded-2xl border border-white/50 text-center">
+                    <span class="text-[10px] font-bold text-teal-600/60 uppercase tracking-widest block mb-1">本月杯數</span>
+                    <span class="text-xl font-black text-teal-800"><span id="monthCount">0</span> 杯</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 年度報表 -->
+        <section class="gradient-card text-white rounded-[2rem] p-6 relative overflow-hidden shadow-lg">
+            <i data-lucide="award" class="absolute -top-4 -right-4 opacity-10" size="120"></i>
+            <h3 class="font-bold text-teal-50 mb-5 flex items-center gap-2 text-xs uppercase tracking-widest">
+                <i data-lucide="trending-up" size="14"></i> 2026 年度累計
+            </h3>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10 text-center">
+                    <div class="text-[10px] text-teal-100 font-bold mb-1 opacity-70">年度總杯數</div>
+                    <div class="text-2xl font-black"><span id="yearCount">0</span></div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10 text-center">
+                    <div class="text-[10px] text-teal-100 font-bold mb-1 opacity-70">年度總金額</div>
+                    <div class="text-2xl font-black"><span id="yearTotal">0</span></div>
+                </div>
+            </div>
+            
+            <!-- 1. 年度最愛 TOP 3 -->
+            <div class="bg-black/10 p-4 rounded-2xl border border-white/5 mb-4">
+                <div class="text-[10px] text-teal-100 font-bold mb-3 flex items-center gap-2 opacity-80"><i data-lucide="star" size="12"></i> 年度最愛 TOP 3</div>
+                <div id="topItemsList" class="space-y-2 text-sm"></div>
+            </div>
+
+            <!-- 2. AI 性格分析 -->
+            <div class="bg-black/20 p-4 rounded-2xl border border-white/10">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="text-[10px] text-teal-100 font-bold flex items-center gap-2 uppercase tracking-widest"><i data-lucide="sparkles" size="12"></i> AI 飲品性格分析</div>
+                    <button id="aiAnalyzeBtn" class="bg-white/20 text-[10px] px-2 py-1 rounded-lg font-bold hover:bg-white/30 transition flex items-center gap-1">
+                        <span id="aiBtnText">✨ 分析品味</span>
+                        <div id="aiLoading" class="loading-spinner hidden"></div>
+                    </button>
+                </div>
+                <div id="aiPersonalityText" class="text-xs text-teal-50 italic leading-relaxed">
+                    尚未分析。點擊按鈕診斷手搖魂...
+                </div>
+            </div>
+        </section>
+
+        <!-- 每日詳情清單 -->
+        <section id="dailySection" class="glass-card rounded-[2rem] p-6 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="selectedDateText" class="font-black text-teal-900 text-xl tracking-tight">2026-01-01</h3>
+                <button id="closeDaily" class="p-2 text-teal-300 active:scale-90 transition"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div id="drinkList" class="space-y-4 mb-6"></div>
+            <button id="addNewBtn" class="w-full bg-teal-600 text-white font-black py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 text-sm tracking-widest active:scale-95 transition">
+                <i data-lucide="plus" size="18"></i> 新增另一杯飲品
+            </button>
+        </section>
+
+        <section id="emptyState" class="text-center py-20">
+            <i data-lucide="sparkles" class="mx-auto text-teal-600/20 mb-4 animate-pulse" size="64"></i>
+            <p class="text-teal-700/40 font-bold text-xs uppercase tracking-widest">點擊日期直接記錄</p>
+        </section>
+
+    </main>
+
+    <!-- 編輯/新增 Modal -->
+    <div id="editModal" class="fixed inset-0 modal-overlay flex items-end sm:items-center justify-center hidden" style="z-index: 150;">
+        <div class="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h4 id="modalTitle" class="text-xl font-black text-teal-900">新增紀錄</h4>
+                <button id="cancelBtn" class="p-2 text-slate-300 active:scale-90 transition"><i data-lucide="x" size="24"></i></button>
+            </div>
+
+            <form id="drinkForm" class="space-y-5 pb-6">
+                <input type="text" id="shopName" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 font-bold focus:ring-2 focus:ring-teal-500 outline-none" placeholder="店家名稱">
+                <input type="text" id="itemName" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 font-bold focus:ring-2 focus:ring-teal-500 outline-none" placeholder="品項名稱">
+
+                <div class="space-y-3">
+                    <label class="block text-[11px] font-bold text-teal-600 uppercase ml-1">冰塊</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <input type="radio" name="ice" id="i_f" value="固定" class="hidden option-input"><label for="i_f" class="option-label">固定</label>
+                        <input type="radio" name="ice" id="i_n" value="去冰" class="hidden option-input"><label for="i_n" class="option-label">去冰</label>
+                        <input type="radio" name="ice" id="i_mi" value="微冰" class="hidden option-input"><label for="i_mi" class="option-label">微冰</label>
+                        <input type="radio" name="ice" id="i_l" value="少冰" class="hidden option-input"><label for="i_l" class="option-label">少冰</label>
+                        <input type="radio" name="ice" id="i_no" value="正常冰" class="hidden option-input" checked><label for="i_no" class="option-label">正常冰</label>
+                        <input type="radio" name="ice" id="i_r" value="常溫" class="hidden option-input"><label for="i_r" class="option-label">常溫</label>
+                        <input type="radio" name="ice" id="i_w" value="溫" class="hidden option-input"><label for="i_w" class="option-label">溫</label>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block text-[11px] font-bold text-teal-600 uppercase ml-1">甜度</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="radio" name="sugar" id="s_f" value="固定" class="hidden option-input"><label for="s_f" class="option-label">固定</label>
+                        <input type="radio" name="sugar" id="s_mi" value="微糖" class="hidden option-input"><label for="s_mi" class="option-label">微糖</label>
+                        <input type="radio" name="sugar" id="s_h" value="半糖" class="hidden option-input"><label for="s_h" class="option-label">半糖</label>
+                        <input type="radio" name="sugar" id="s_l" value="少糖" class="hidden option-input"><label for="s_l" class="option-label">少糖</label>
+                        <input type="radio" name="sugar" id="s_no" value="正常甜" class="hidden option-input" checked><label for="s_no" class="option-label">正常甜</label>
+                    </div>
+                </div>
+
+                <input type="number" id="price" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 font-black text-xl" placeholder="價格 NT$">
+                <textarea id="notes" rows="3" class="w-full p-4 bg-teal-50/50 rounded-2xl border border-teal-100 text-sm font-medium" placeholder="這杯喝起來如何？"></textarea>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="button" id="saveBtn" class="flex-1 bg-teal-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition">儲存紀錄</button>
+                    <button type="button" id="deleteBtn" class="px-5 bg-rose-50 text-rose-500 rounded-2xl border border-rose-100 hidden active:bg-rose-100 transition"><i data-lucide="trash-2" size="22"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 刪除確認 Modal -->
+    <div id="confirmModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[200]">
+        <div class="bg-white rounded-[2rem] w-full max-w-xs p-8 shadow-2xl space-y-6 text-center animate-in zoom-in-95">
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl mx-auto flex items-center justify-center"><i data-lucide="alert-triangle" size="32"></i></div>
+            <h4 class="text-xl font-black text-slate-800">確定刪除嗎？</h4>
+            <div class="grid grid-cols-2 gap-3">
+                <button id="cancelDelete" class="bg-slate-50 text-slate-500 font-bold py-3 rounded-xl active:scale-95 transition">取消</button>
+                <button id="confirmDelete" class="bg-rose-500 text-white font-bold py-3 rounded-xl active:scale-95 transition">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-10 py-4 rounded-full text-xs font-black shadow-2xl opacity-0 transition-all pointer-events-none z-[400] tracking-widest uppercase">
+        Synced to Cloud
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 虛擬 Service Worker 註冊 (Android 修復關鍵) ---
+        const registerSW = () => {
+            if ('serviceWorker' in navigator) {
+                const swCode = "self.addEventListener('fetch', function(event) {});";
+                const blob = new Blob([swCode], { type: 'text/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Error', err));
+            }
+        };
+        registerSW();
+
+        // --- Gemini API ---
+        const apiKey = "";
+        const geminiModel = "gemini-2.5-flash-preview-09-2025";
+
+        async function callGemini(prompt, systemInstruction = "") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
+            };
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error("API Failed");
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text;
+                } catch (error) {
+                    if (i === 4) throw error;
+                    await new Promise(r => setTimeout(r, delay)); delay *= 2;
+                }
+            }
+        }
+
+        // --- Firebase ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'drink-tracker-final-2026';
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let user = null, selectedDate = null, allLogs = [], editingId = null;
+        let currentYear = 2026, currentMonth = 0;
+
+        const calendarEl = document.getElementById('calendar'), monthYearText = document.getElementById('currentMonthYear'), dailySection = document.getElementById('dailySection'), emptyState = document.getElementById('emptyState'), editModal = document.getElementById('editModal'), confirmModal = document.getElementById('confirmModal'), drinkList = document.getElementById('drinkList'), drinkForm = document.getElementById('drinkForm');
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+            else await signInAnonymously(auth);
+        };
+
+        onAuthStateChanged(auth, (u) => { user = u; if (user) fetchData(); });
+
+        const fetchData = () => {
+            if (!user) return;
+            onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'drink_logs'), (snapshot) => {
+                allLogs = []; snapshot.forEach(doc => { allLogs.push({ id: doc.id, ...doc.data() }); });
+                renderCalendar(); updateStats();
+                if (selectedDate) renderDailyDrinks(selectedDate);
+            });
+        };
+
+        const renderCalendar = () => {
+            calendarEl.innerHTML = '';
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay(), daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            monthYearText.innerText = `${currentYear}年 ${currentMonth + 1}月`;
+            for (let i = 0; i < firstDay; i++) calendarEl.appendChild(document.createElement('div'));
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const hasData = allLogs.some(log => log.date === dateStr);
+                const cell = document.createElement('div');
+                cell.className = `day-cell text-sm ${selectedDate === dateStr ? 'active' : ''} ${hasData ? 'has-data text-teal-900' : 'text-teal-900/30'}`;
+                cell.innerText = d;
+                cell.onclick = () => selectDate(dateStr);
+                calendarEl.appendChild(cell);
+            }
+            lucide.createIcons();
+        };
+
+        const selectDate = (dateStr) => {
+            selectedDate = dateStr;
+            document.getElementById('selectedDateText').innerText = dateStr;
+            dailySection.classList.remove('hidden'); emptyState.classList.add('hidden');
+            renderDailyDrinks(dateStr); renderCalendar(); openModal();
+        };
+
+        const renderDailyDrinks = (dateStr) => {
+            const dailyDrinks = allLogs.filter(log => log.date === dateStr);
+            drinkList.innerHTML = '';
+            if (dailyDrinks.length === 0) {
+                drinkList.innerHTML = '<div class="text-center py-6 text-teal-700/30 text-xs italic">尚未紀錄</div>';
+                return;
+            }
+            dailyDrinks.forEach(drink => {
+                const card = document.createElement('div');
+                card.className = "bg-white/60 p-5 rounded-2xl border border-teal-100 flex justify-between items-start active:scale-[0.98] transition";
+                card.onclick = (e) => { e.stopPropagation(); openModal(drink.id); };
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="text-[10px] text-teal-600 font-bold uppercase">${drink.shopName || '未知店家'}</div>
+                        <div class="text-lg font-black text-slate-800">${drink.itemName || '無名飲品'}</div>
+                        <div class="flex gap-2 pt-1"><span class="badge badge-ice">${drink.iceLevel}</span><span class="badge badge-sugar">${drink.sweetness}</span></div>
+                    </div>
+                    <div class="text-right text-lg font-black text-teal-700">NT$ ${drink.price}</div>
+                `;
+                drinkList.appendChild(card);
+            });
+            lucide.createIcons();
+        };
+
+        const openModal = (id = null) => {
+            editingId = id;
+            document.getElementById('modalTitle').innerText = id ? "編輯紀錄" : "新增紀錄";
+            document.getElementById('deleteBtn').classList.toggle('hidden', !id);
+            drinkForm.reset();
+            if (id) {
+                const drink = allLogs.find(l => l.id === id);
+                document.getElementById('shopName').value = drink.shopName || '';
+                document.getElementById('itemName').value = drink.itemName || '';
+                document.getElementById('price').value = drink.price || '';
+                document.getElementById('notes').value = drink.notes || '';
+                if(drink.iceLevel) { const r = Array.from(document.getElementsByName('ice')).find(x => x.value === drink.iceLevel); if(r) r.checked = true; }
+                if(drink.sweetness) { const r = Array.from(document.getElementsByName('sugar')).find(x => x.value === drink.sweetness); if(r) r.checked = true; }
+            } else {
+                document.getElementById('i_no').checked = true; document.getElementById('s_no').checked = true;
+            }
+            editModal.classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        document.getElementById('saveBtn').onclick = async () => {
+            if (!user || !selectedDate) return;
+            const data = {
+                date: selectedDate,
+                shopName: document.getElementById('shopName').value,
+                itemName: document.getElementById('itemName').value,
+                price: Number(document.getElementById('price').value) || 0,
+                iceLevel: document.querySelector('input[name="ice"]:checked')?.value || '正常冰',
+                sweetness: document.querySelector('input[name="sugar"]:checked')?.value || '正常甜',
+                notes: document.getElementById('notes').value,
+                timestamp: new Date().toISOString()
+            };
+            if (editingId) await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'drink_logs', editingId), data);
+            else await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'drink_logs'), data);
+            editModal.classList.add('hidden'); showToast("已存檔");
+        };
+
+        document.getElementById('aiAnalyzeBtn').onclick = async () => {
+            if (allLogs.length === 0) return showToast("尚未紀錄");
+            const target = document.getElementById('aiPersonalityText'), loading = document.getElementById('aiLoading'), btnText = document.getElementById('aiBtnText'), btn = document.getElementById('aiAnalyzeBtn');
+            btn.disabled = true; loading.classList.remove('hidden'); btnText.innerText = "✨ 分析中...";
+            target.innerText = "正在診斷您的手搖魂...";
+            try {
+                const summary = allLogs.slice(-15).map(l => `${l.itemName}(${l.sweetness})`).join(', ');
+                const prompt = `這是我最近喝的手搖紀錄：${summary}。請根據這些紀錄分析我是一個怎樣的手搖愛好者？請給我一個幽默的「封號」，並對我的 2026 年給出一句健康建議。請用繁體中文回答，約 100 字。`;
+                target.innerText = (await callGemini(prompt, "你是一位幽默的手搖飲大師，說話帶點有趣的吐槽但很溫馨。")).trim();
+                showToast("分析完成！");
+            } catch (err) { target.innerText = "AI 暫時口渴了。"; } finally { btn.disabled = false; loading.classList.add('hidden'); btnText.innerText = "✨ 重新分析"; }
+        };
+
+        document.getElementById('deleteBtn').onclick = () => confirmModal.classList.remove('hidden');
+        document.getElementById('confirmDelete').onclick = async () => {
+            await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'drink_logs', editingId));
+            confirmModal.classList.add('hidden'); editModal.classList.add('hidden'); showToast("已刪除紀錄");
+        };
+        document.getElementById('cancelBtn').onclick = () => editModal.classList.add('hidden');
+        document.getElementById('cancelDelete').onclick = () => confirmModal.classList.add('hidden');
+        document.getElementById('closeDaily').onclick = () => { dailySection.classList.add('hidden'); emptyState.classList.remove('hidden'); selectedDate = null; renderCalendar(); };
+        document.getElementById('prevMonth').onclick = () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); updateStats(); };
+        document.getElementById('nextMonth').onclick = () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); updateStats(); };
+        document.getElementById('addNewBtn').onclick = () => openModal();
+        const showToast = (m) => { const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2000); };
+        
+        const updateStats = () => {
+            let mt = 0, mc = 0, yt = 0, yc = 0; const items = {};
+            const yp = `${currentYear}-`, mp = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+            allLogs.forEach(log => {
+                const p = Number(log.price || 0);
+                if (log.date.startsWith(yp)) { yt += p; yc++; if (log.itemName) items[log.itemName] = (items[log.itemName] || 0) + 1; }
+                if (log.date.startsWith(mp)) { mt += p; mc++; }
+            });
+            document.getElementById('monthTotal').innerText = mt.toLocaleString();
+            document.getElementById('monthCount').innerText = mc;
+            document.getElementById('yearTotal').innerText = yt.toLocaleString();
+            document.getElementById('yearCount').innerText = yc;
+            const sorted = Object.entries(items).sort((a,b) => b[1]-a[1]).slice(0, 3);
+            document.getElementById('topItemsList').innerHTML = sorted.map((it, i) => `<div class="flex justify-between text-xs font-bold"><span>${i+1}. ${it[0]}</span><span class="text-teal-200">${it[1]} 杯</span></div>`).join('') || '<div class="opacity-30 text-[10px] font-bold text-center">NO DATA</div>';
+        };
+
+        window.onload = () => { initAuth(); renderCalendar(); };
+    </script>
+</body>
+</html>
+
